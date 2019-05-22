@@ -7,7 +7,7 @@ train_img_dir = "./data/train/"
 test_img_dir = "./data/test/"
 
 
-def train_generator(df, batch_size, WIDTH=512, HEIGHT=512):
+def train_generator(df, batch_size, category_num,WIDTH=512, HEIGHT=512):
     img_ind_num = df.groupby("ImageId")["ClassId"].count()
     index = df.index.values[0]
     trn_images = []
@@ -19,7 +19,7 @@ def train_generator(df, batch_size, WIDTH=512, HEIGHT=512):
         index += ind_num
         if segment_df["ImageId"].nunique() != 1:
             raise Exception("Index Range Error")
-        seg_img = make_mask_img(segment_df, WIDTH, HEIGHT)
+        seg_img = make_mask_img(segment_df, category_num,WIDTH, HEIGHT)
 
         # HWC -> CHW
         img = img.transpose((2, 0, 1))
