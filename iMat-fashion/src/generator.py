@@ -19,7 +19,7 @@ def train_generator(df, batch_size, WIDTH=512, HEIGHT=512):
         index += ind_num
         if segment_df["ImageId"].nunique() != 1:
             raise Exception("Index Range Error")
-        seg_img = make_mask_img(segment_df)
+        seg_img = make_mask_img(segment_df, WIDTH, HEIGHT)
 
         # HWC -> CHW
         img = img.transpose((2, 0, 1))
@@ -35,7 +35,7 @@ def train_generator(df, batch_size, WIDTH=512, HEIGHT=512):
         yield np.array(trn_images, dtype=np.float32) / 255, np.array(seg_images, dtype=np.int32)
 
 
-def test_generator(df,WIDTH=512, HEIGHT=512):
+def test_generator(df, WIDTH=512, HEIGHT=512):
     img_names = df["ImageId"].values
     for img_name in img_names:
         img = cv2.imread(test_img_dir + img_name)

@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from itertools import groupby
 
+
 def make_onehot_vec(x, category_num):
     vec = np.zeros(category_num)
     vec[x] = 1
@@ -35,7 +36,7 @@ def encode(input_string):
     return [(len(list(g)), k) for k, g in groupby(input_string)]
 
 
-def run_length(label_vec,category_num):
+def run_length(label_vec, category_num):
     encode_list = encode(label_vec)
     index = 1
     class_dict = {}
