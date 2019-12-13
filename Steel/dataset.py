@@ -1,9 +1,8 @@
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 import os
-
 from torch.utils.data import DataLoader, Dataset, sampler
-from albumentations import (HorizontalFlip, ShiftScaleRotate, Normalize, Resize, Compose, GaussNoise)
+from albumentations import HorizontalFlip, ShiftScaleRotate, Normalize, Resize, Compose, GaussNoise
 from albumentations.torch import ToTensor
 import pandas as pd
 from utils import make_mask
@@ -11,20 +10,24 @@ import cv2
 
 
 class SteelDataset(Dataset):
-    def __init__(self, df, data_folder, mean, std, phase):
+    def __init__(self, df, data_folder, phase, mean=None, std=None):
         self.df = df
         self.root = data_folder
         self.mean = mean
         self.std = std
         self.phase = phase
-        self.transforms = get_transforms(phase, mean, std)
+        self.transforms = get_transforms(self.phase, self.mean, self.std)
         self.fnames = self.df.index.tolist()
 
     def __getitem__(self, idx):
+        # import pdb
+        # pdb.set_trace()
         image_id, mask = make_mask(idx, self.df)
         image_path = os.path.join(self.root, "train_images", image_id)
         img = cv2.imread(image_path)
+
         augmented = self.transforms(image=img, mask=mask)
+        ###
         img = augmented['image']
         mask = augmented['mask']  # 1x256x1600x4
         mask = mask[0].permute(2, 0, 1)  # 1x4x256x1600
@@ -70,7 +73,7 @@ def get_transforms(phase, mean, std):
         )
     list_transforms.extend(
         [
-            Normalize(mean=mean, std=std, p=1),
+            # Normalize(mean=mean, std=std, p=1),
             ToTensor(),
         ]
     )
@@ -87,7 +90,7 @@ def provider(
         batch_size=8,
         num_workers=4):
     '''Returns dataloader for the model training'''
-    df = pd.read_csv(df_path)
+    df = pd.read_csv(df_path, engine='python')
     # some preprocessing
     # https://www.kaggle.com/amanooo/defect-detection-starter-u-net
     df['ImageId'], df['ClassId'] = zip(*df['ImageId_ClassId'].str.split('_'))
@@ -97,7 +100,7 @@ def provider(
 
     train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["defects"])
     df = train_df if phase == "train" else val_df
-    image_dataset = SteelDataset(df, data_folder, mean, std, phase)
+    image_dataset = SteelDataset(df, data_folder, phase, mean, std)
     dataloader = DataLoader(
         image_dataset,
         batch_size=batch_size,

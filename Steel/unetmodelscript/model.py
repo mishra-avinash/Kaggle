@@ -11,7 +11,6 @@ import numpy as np
 
 
 def preprocess_input(x, mean=None, std=None, input_space='RGB', input_range=None, **kwargs):
-
     if input_space == 'BGR':
         x = x[..., ::-1].copy()
 
@@ -47,12 +46,11 @@ class Model(nn.Module):
 class Conv2dReLU(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding=0,
                  stride=1, use_batchnorm=True, **batchnorm_params):
-
         super().__init__()
 
         layers = [
             nn.Conv2d(in_channels, out_channels, kernel_size,
-                              stride=stride, padding=padding, bias=not (use_batchnorm)),
+                      stride=stride, padding=padding, bias=not (use_batchnorm)),
             nn.ReLU(inplace=True),
         ]
 
@@ -271,6 +269,7 @@ resnet_encoders = {
 encoders = {}
 encoders.update(resnet_encoders)
 
+
 def get_encoder(name, encoder_weights=None):
     Encoder = encoders[name]['encoder']
     encoder = Encoder(**encoders[name]['params'])
@@ -297,7 +296,7 @@ def get_preprocessing_fn(encoder_name, pretrained='imagenet'):
     input_range = settings[pretrained].get('input_range')
     mean = settings[pretrained].get('mean')
     std = settings[pretrained].get('std')
-    
+
     return functools.partial(preprocess_input, mean=mean, std=std, input_space=input_space, input_range=input_range)
 
 

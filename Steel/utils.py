@@ -40,10 +40,10 @@ def rle2mask(mask_rle, shape=(1600, 256)):
 
 
 def make_mask(row_id, df):
-    '''Given a row index, return image_id and mask (256, 1600, 4)'''
+    '''Given a row index, return image_id and mask (256, 1600, 4) from the dataframe `df`'''
     fname = df.iloc[row_id].name
     labels = df.iloc[row_id][:4]
-    masks = np.zeros((256, 1600, 4), dtype=np.float32)  # float32 is V.Imp
+    masks = np.zeros((256, 1600, 4), dtype=np.float32) # float32 is V.Imp
     # 4:class 1～4 (ch:0～3)
 
     for idx, label in enumerate(labels.values):
