@@ -73,7 +73,7 @@ def get_transforms(phase, mean, std):
         )
     list_transforms.extend(
         [
-            # Normalize(mean=mean, std=std, p=1),
+            Normalize(mean=mean, std=std, p=1),
             ToTensor(),
         ]
     )
@@ -88,7 +88,7 @@ def provider(
         mean=None,
         std=None,
         batch_size=8,
-        num_workers=4):
+        num_workers=4,seed=420):
     '''Returns dataloader for the model training'''
     df = pd.read_csv(df_path, engine='python')
     # some preprocessing
@@ -98,7 +98,7 @@ def provider(
     df = df.pivot(index='ImageId', columns='ClassId', values='EncodedPixels')
     df['defects'] = df.count(axis=1)
 
-    train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["defects"])
+    train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["defects"], random_state=seed)
     df = train_df if phase == "train" else val_df
     image_dataset = SteelDataset(df, data_folder, phase, mean, std)
     dataloader = DataLoader(
