@@ -43,7 +43,7 @@ def make_mask(row_id, df):
     '''Given a row index, return image_id and mask (256, 1600, 4) from the dataframe `df`'''
     fname = df.iloc[row_id].name
     labels = df.iloc[row_id][:4]
-    masks = np.zeros((256, 1600, 4), dtype=np.float32) # float32 is V.Imp
+    masks = np.zeros((256, 1600, 4), dtype=np.float32)  # float32 is V.Imp
     # 4:class 1～4 (ch:0～3)
 
     for idx, label in enumerate(labels.values):
@@ -97,3 +97,21 @@ def metric(probability, truth, threshold=0.5, reduction='none'):
         num_pos = len(pos_index)
 
     return dice, dice_neg, dice_pos, num_neg, num_pos
+
+
+class UnNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+            # The normalize code -> t.sub_(m).div_(s)
+        return tensor
