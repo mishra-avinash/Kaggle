@@ -9,11 +9,6 @@ from dataset import provider
 import torch.nn as nn
 
 import time
-import os
-from torch.utils.data import DataLoader, Dataset
-from albumentations import (Normalize, Compose)
-from albumentations.torch import ToTensor
-import torch.utils.data as data
 
 
 class Trainer(object):
@@ -27,7 +22,7 @@ class Trainer(object):
         self.num_epochs = 20
         self.best_loss = float("inf")
         self.phases = ["train", "val"]
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
         self.net = model
         self.criterion = torch.nn.BCEWithLogitsLoss()
@@ -73,6 +68,8 @@ class Trainer(object):
             import pdb
             # pdb.set_trace()
             images, targets = batch
+            # images = images.to(self.device)
+            # targets = targets.to(self.device)
             loss, outputs = self.forward(images, targets)
             loss = loss / self.accumulation_steps
             if phase == "train":
@@ -107,5 +104,5 @@ class Trainer(object):
             if val_loss < self.best_loss:
                 print("******** New optimal found, saving state ********")
                 state["best_loss"] = self.best_loss = val_loss
-                torch.save(state, "./model.pth")
+                torch.save(state, "../trained_models/model.pth")
             print()
