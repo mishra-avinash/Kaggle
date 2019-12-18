@@ -15,7 +15,7 @@ def epoch_log(phase, epoch, epoch_loss, meter, start):
     dices, iou = meter.get_metrics()
     dice, dice_neg, dice_pos = dices
     print("Loss: %0.4f | IoU: %0.4f | dice: %0.4f | dice_neg: %0.4f | dice_pos: %0.4f" % (
-    epoch_loss, iou, dice, dice_neg, dice_pos))
+        epoch_loss, iou, dice, dice_neg, dice_pos))
     return dice, iou
 
 

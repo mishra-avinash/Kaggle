@@ -10,7 +10,7 @@ import cv2
 
 
 class SteelDataset(Dataset):
-    def __init__(self, df, data_folder, phase, mean=None, std=None):
+    def __init__(self, df, data_folder, phase, mean, std):
         self.df = df
         self.root = data_folder
         self.mean = mean
@@ -20,8 +20,6 @@ class SteelDataset(Dataset):
         self.fnames = self.df.index.tolist()
 
     def __getitem__(self, idx):
-        # import pdb
-        # pdb.set_trace()
         image_id, mask = make_mask(idx, self.df)
         image_path = os.path.join(self.root, "train_images", image_id)
         img = cv2.imread(image_path)
@@ -85,10 +83,11 @@ def provider(
         data_folder,
         df_path,
         phase,
-        mean=None,
-        std=None,
-        batch_size=8,
-        num_workers=4,seed=420):
+        seed,
+        batch_size,
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225),
+        num_workers=4):
     '''Returns dataloader for the model training'''
     df = pd.read_csv(df_path, engine='python')
     # some preprocessing

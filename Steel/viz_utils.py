@@ -25,7 +25,7 @@ def mask_to_contours(image, mask_layer, color):
     return image
 
 
-def visualise_mask(imgs, masks):
+def visualise_mask(imgs, masks, unnormalize=True):
     """ open an image and draws clear masks, so we don't lose sight of the
         interesting features hiding underneath
     """
@@ -36,30 +36,35 @@ def visualise_mask(imgs, masks):
 
     for index in range(imgs.shape[0]):
 
-        img = imgs[index].numpy().transpose((1, 2, 0))
+        img = imgs[index]
+        if unnormalize:
+            # rev   erse normalize it
+            unnorm = UnNormalize()
+            img = unnorm(img)
+
+        img = img.numpy().transpose((1, 2, 0))
         mask = masks[index].numpy().transpose((1, 2, 0))
 
-        fig, axes = plt.subplots(mask.shape[-1], 1, figsize=(16, 20))
-        fig.tight_layout()
+        # fig, axes = plt.subplots(mask.shape[-1], 1, figsize=(16, 20))
+        # fig.tight_layout()
 
         for i in range(mask.shape[-1]):
             # indeces are [0, 1, 2, 3], corresponding classes are [1, 2, 3, 4]
-            label = i + 1
-            ax = axes[i,]
-            # add the contours, layer per layer
-            image = mask_to_contours(img, mask[:, :, i], color=palette[label])
+            if np.amax(mask[:, :, i]) > 0.0:
+                label = i + 1
+                # ax = axes[i]
+                # add the contours, layer per layer
+                image = mask_to_contours(img, mask[:, :, i], color=palette[label])
 
-            ax.set_title("In image {} for defect {}".format(index, i))
-            ax.axis('off')
-            ax.imshow(image.get())
+                plt.figure(figsize=(16, 30))
+                plt.title("In image {} for defect {}".format(index, i))
+                plt.imshow(image.get())
 
 
-#     return image
-def show_mask_image(imgs, mean=None, std=None, unnormalize=True, masks=None):
+def show_mask_image(imgs, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), unnormalize=True, masks=None):
     """
     Mask is 4 dimension because we have mask for 4 different classes
     """
-    filenames = "img"
 
     for index in range(imgs.shape[0]):
 

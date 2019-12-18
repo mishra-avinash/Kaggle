@@ -4,6 +4,7 @@ from torch import optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from logging_metric import Meter
+from torch.utils.tensorboard import SummaryWriter
 from train import epoch_log
 from dataset import provider
 import torch.nn as nn
@@ -14,12 +15,21 @@ import time
 class Trainer(object):
     '''This class takes care of training and validation of our model'''
 
-    def __init__(self, model, data_folder, train_df_path):
-        self.num_workers = 6
-        self.batch_size = {"train": 8, "val": 8}
+    def __init__(self, model, writer, config):
+        self.writer = writer
+        self.data_folder = config.get('FILES', 'DATA_FOLDER')
+        self.train_df_path = config.get('FILES', 'TRAIN_DF_PATH')
+        self.num_workers = config.getint('COMMON', 'NO_WORKERS')
+        self.batch_train = config.getint('TRAINING', 'BATCH_TRAIN')
+        self.batch_val = config.getint('TRAINING', 'BATCH_VAL')
+        self.batch_size = {"train": self.batch_train, "val": self.batch_val}
         self.accumulation_steps = 32 // self.batch_size['train']
-        self.lr = 5e-4
-        self.num_epochs = 20
+        self.lr = config.getfloat('TRAINING', 'LR')
+        self.num_epochs = config.getint('TRAINING', 'EPOCH')
+        self.mean = config.getflot('PROCESSING', 'MEAN')
+        self.std = config.getflot('PROCESSING', 'STD')
+        self.seed = config.getint('COMMON', 'SEED')
+
         self.best_loss = float("inf")
         self.phases = ["train", "val"]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -32,13 +42,14 @@ class Trainer(object):
         cudnn.benchmark = True
         self.dataloaders = {
             phase: provider(
-                data_folder=data_folder,
-                df_path=train_df_path,
+                data_folder=self.data_folder,
+                df_path=self.train_df_path,
                 phase=phase,
-                mean=(0.485, 0.456, 0.406),
-                std=(0.229, 0.224, 0.225),
+                mean=self.mean,
+                std=self.std,
                 batch_size=self.batch_size[phase],
                 num_workers=self.num_workers,
+                seed=self.seed
             )
             for phase in self.phases
         }
@@ -54,22 +65,17 @@ class Trainer(object):
         return loss, outputs
 
     def iterate(self, epoch, phase):
-        meter = Meter(phase, epoch)
+        meter = Meter(phase, epoch, self.writer)
         start = time.strftime("%H:%M:%S")
         print(f"Starting epoch: {epoch} | phase: {phase} | ⏰: {start}")
-        batch_size = self.batch_size[phase]
+        # batch_size = self.batch_size[phase]
         self.net.train(phase == "train")
         dataloader = self.dataloaders[phase]
         running_loss = 0.0
         total_batches = len(dataloader)
-        #         tk0 = tqdm(dataloader, total=total_batches)
         self.optimizer.zero_grad()
         for itr, batch in enumerate(dataloader):  # replace `dataloader` with `tk0` for tqdm
-            import pdb
-            # pdb.set_trace()
             images, targets = batch
-            # images = images.to(self.device)
-            # targets = targets.to(self.device)
             loss, outputs = self.forward(images, targets)
             loss = loss / self.accumulation_steps
             if phase == "train":
@@ -83,6 +89,9 @@ class Trainer(object):
         #             tk0.set_postfix(loss=(running_loss / ((itr + 1))))
         epoch_loss = (running_loss * self.accumulation_steps) / total_batches
         dice, iou = epoch_log(phase, epoch, epoch_loss, meter, start)
+        # update board
+        meter.update_board(epoch_loss, dice, iou, images, targets)
+
         self.losses[phase].append(epoch_loss)
         self.dice_scores[phase].append(dice)
         self.iou_scores[phase].append(iou)

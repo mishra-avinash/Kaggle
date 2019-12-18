@@ -60,12 +60,11 @@ class Trainer(object):
         meter = Meter(phase, epoch)
         start = time.strftime("%H:%M:%S")
         print(f"Starting epoch: {epoch} | phase: {phase} | ⏰: {start}")
-        batch_size = self.batch_size[phase]
+        # batch_size = self.batch_size[phase]
         self.net.train(phase == "train")
         dataloader = self.dataloaders[phase]
         running_loss = 0.0
         total_batches = len(dataloader)
-        #         tk0 = tqdm(dataloader, total=total_batches)
         self.optimizer.zero_grad()
         for itr, batch in enumerate(dataloader):  # replace `dataloader` with `tk0` for tqdm
             import pdb
