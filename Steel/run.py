@@ -10,8 +10,8 @@ from trainer_multi import Trainer
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description='Weather connector')
-    argparser.add_argument('configfile', type=str, default='config.ini', help='Config file (ini format)')
-    argparser.add_argument('train_tag', type=str, help='tag for training')
+    argparser.add_argument('--configfile', type=str, default='config.ini', help='Config file (ini format)')
+    argparser.add_argument('--train_tag', type=str, help='tag for training')
     args = argparser.parse_args()
 
     config = configparser.ConfigParser()
@@ -32,5 +32,6 @@ if __name__ == "__main__":
     writer = SummaryWriter(PATH_to_log_dir, comment='args.train_tag')
 
     model = Unet(encoder, encoder_weights=encoder_weights, classes=4, activation=None)
-    model_trainer = Trainer(model, data_folder, train_df_path, config=config, writer=writer)
+
+    model_trainer = Trainer(model, config=config, writer=writer)
     model_trainer.start()

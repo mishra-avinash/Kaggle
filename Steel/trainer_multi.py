@@ -10,6 +10,7 @@ from dataset import provider
 import torch.nn as nn
 
 import time
+import datetime
 
 
 class Trainer(object):
@@ -19,6 +20,7 @@ class Trainer(object):
         self.writer = writer
         self.data_folder = config.get('FILES', 'DATA_FOLDER')
         self.train_df_path = config.get('FILES', 'TRAIN_DF_PATH')
+        self.save_model_dir = config.get('FILES', 'TRAINED_MODELS_DIR')
         self.num_workers = config.getint('COMMON', 'NO_WORKERS')
         self.batch_train = config.getint('TRAINING', 'BATCH_TRAIN')
         self.batch_val = config.getint('TRAINING', 'BATCH_VAL')
@@ -26,8 +28,8 @@ class Trainer(object):
         self.accumulation_steps = 32 // self.batch_size['train']
         self.lr = config.getfloat('TRAINING', 'LR')
         self.num_epochs = config.getint('TRAINING', 'EPOCH')
-        self.mean = config.getflot('PROCESSING', 'MEAN')
-        self.std = config.getflot('PROCESSING', 'STD')
+        self.mean = config.get('PROCESSING', 'MEAN').split(',')
+        self.std = config.get('PROCESSING', 'STD').split(',')
         self.seed = config.getint('COMMON', 'SEED')
 
         self.best_loss = float("inf")
@@ -35,10 +37,12 @@ class Trainer(object):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
         self.net = model
+        self.net = self.net.to(self.device)
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = optim.Adam(self.net.parameters(), lr=self.lr)
         self.scheduler = ReduceLROnPlateau(self.optimizer, mode="min", patience=3, verbose=True)
         self.net = nn.DataParallel(self.net)
+
         cudnn.benchmark = True
         self.dataloaders = {
             phase: provider(
@@ -113,5 +117,6 @@ class Trainer(object):
             if val_loss < self.best_loss:
                 print("******** New optimal found, saving state ********")
                 state["best_loss"] = self.best_loss = val_loss
-                torch.save(state, "../trained_models/model.pth")
+                time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                torch.save(state, self.save_model_dir + time_str + '_model.pth')
             print()
