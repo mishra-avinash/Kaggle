@@ -18,6 +18,7 @@ class Trainer(object):
 
     def __init__(self, model, writer, config):
         self.writer = writer
+        self.model_name = config.get('MODEL', 'NAME')
         self.data_folder = config.get('FILES', 'DATA_FOLDER')
         self.train_df_path = config.get('FILES', 'TRAIN_DF_PATH')
         self.save_model_dir = config.get('FILES', 'TRAINED_MODELS_DIR')
@@ -117,6 +118,4 @@ class Trainer(object):
             if val_loss < self.best_loss:
                 print("******** New optimal found, saving state ********")
                 state["best_loss"] = self.best_loss = val_loss
-                time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-                torch.save(state, self.save_model_dir + time_str + '_model.pth')
-            print()
+                torch.save(state, self.save_model_dir + '_' + self.model_name + '_model.pth')
