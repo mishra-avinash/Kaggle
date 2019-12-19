@@ -44,6 +44,7 @@ class Meter:
             unnorm = UnNormalize()
             img = unnorm(img)
             self.writer.add_image(tag=name_str + "Img", img_tensor=img, global_step=self.epoch, dataformats='CHW')
+        self.writer.flush()
         # self.writer.add_images(tag=name_str + "Masks", img_tensor=masks, global_step=self.epoch, dataformats='NCHW')
 
     def get_metrics(self):
