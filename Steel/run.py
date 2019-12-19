@@ -12,12 +12,18 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description='Weather connector')
     argparser.add_argument('--configfile', type=str, default='config.ini', help='Config file (ini format)')
     argparser.add_argument('--train_tag', type=str, help='tag for training')
+    argparser.add_argument('--gpu', type=str, help='gpus for training', default='0')
     args = argparser.parse_args()
 
     config = configparser.ConfigParser()
     config.read(args.configfile)
 
-    gpus = config.get('COMMON', 'GPUS')
+    if not args.gpu:
+        gpus = args.gpu
+        config.set('COMMON', 'GPUS', gpus)
+    else:
+        gpus = config.get('COMMON', 'GPUS')
+
     encoder = config.get('MODEL', 'ENCODER')
     encoder_weights = config.get('MODEL', 'ENCODER_WEIGHTS')
     data_folder = config.get('FILES', 'DATA_FOLDER')
