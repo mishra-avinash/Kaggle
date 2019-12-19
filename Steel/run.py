@@ -22,16 +22,20 @@ if __name__ == "__main__":
     encoder_weights = config.get('MODEL', 'ENCODER_WEIGHTS')
     data_folder = config.get('FILES', 'DATA_FOLDER')
     train_df_path = config.get('FILES', 'TRAIN_DF_PATH')
+    logging_dir = config.get('COMMON', 'LOGGING_DIR')
 
     os.environ["CUDA_VISIBLE_DEVICES"] = gpus
     # create a writer
     time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     TRAIN_STR = time_str + args.train_tag
-    PATH_to_log_dir = '../logging/' + TRAIN_STR
+    PATH_to_log_dir = logging_dir + TRAIN_STR
+    save_model_str = encoder + '_' + TRAIN_STR
+    config.set('MODEL', 'NAME', save_model_str)
 
-    writer = SummaryWriter(PATH_to_log_dir, comment='args.train_tag')
+    writer = SummaryWriter(PATH_to_log_dir, comment=args.train_tag)
 
     model = Unet(encoder, encoder_weights=encoder_weights, classes=4, activation=None)
 
     model_trainer = Trainer(model, config=config, writer=writer)
     model_trainer.start()
+    writer.close()
