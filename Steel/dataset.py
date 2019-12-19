@@ -2,7 +2,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 import os
 from torch.utils.data import DataLoader, Dataset, sampler
-from albumentations import HorizontalFlip, ShiftScaleRotate, Normalize, Resize, Compose, GaussNoise
+from albumentations import HorizontalFlip, Normalize, Compose
+import albumentations as albu
 from albumentations.torch import ToTensor
 import pandas as pd
 from utils import make_mask
@@ -66,7 +67,35 @@ def get_transforms(phase, mean, std):
     if phase == "train":
         list_transforms.extend(
             [
-                HorizontalFlip(),  # only horizontal flip as of now
+                HorizontalFlip(p=0.5),  # only horizontal flip as of now
+                albu.ShiftScaleRotate(scale_limit=0.5, rotate_limit=0, shift_limit=0.1, p=1, border_mode=0),
+                albu.IAAAdditiveGaussianNoise(p=0.2),
+                # albu.IAAPerspective(),
+                albu.OneOf(
+                    [
+                        albu.CLAHE(p=1),
+                        albu.RandomBrightnessContrast(p=1),
+                        albu.RandomGamma(p=1),
+                    ],
+                    p=0.9,
+                ),
+                #
+                # albu.OneOf(
+                #     [
+                #         albu.IAASharpen(p=1),
+                #         albu.Blur(blur_limit=3, p=1),
+                #         albu.MotionBlur(blur_limit=3, p=1),
+                #     ],
+                #     p=0.9,
+                # ),
+                #
+                # albu.OneOf(
+                #     [
+                #         albu.RandomBrightnessContrast(p=1),
+                #         albu.HueSaturationValue(p=1),
+                #     ],
+                #     p=0.9,
+                # ),
             ]
         )
     list_transforms.extend(
