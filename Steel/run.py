@@ -33,12 +33,12 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = gpus
     # create a writer
     time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    TRAIN_STR = time_str + args.train_tag
-    PATH_to_log_dir = logging_dir + TRAIN_STR
+    TRAIN_STR = time_str + '_' + args.train_tag
     save_model_str = encoder + '_' + TRAIN_STR
+    PATH_to_log_dir = logging_dir + '_' + save_model_str
     config.set('MODEL', 'NAME', save_model_str)
 
-    writer = SummaryWriter(PATH_to_log_dir, comment=args.train_tag)
+    writer = SummaryWriter(PATH_to_log_dir)
 
     model = Unet(encoder, encoder_weights=encoder_weights, classes=4, activation=None)
 
